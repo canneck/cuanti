@@ -13,7 +13,11 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::whereIn('status', ['Activo', 'Inactivo'])->get();
+        return response()->json([
+            'categories' => $categories,
+            'error' => false
+        ], 200);
     }
 
     /**
@@ -53,7 +57,18 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $category = Category::findOrFail($id);
+            return response()->json([
+                'category' => $category,
+                'error' => false
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Categoría no encontrada.',
+                'error' => true
+            ], 404);
+        }
     }
 
     /**
@@ -130,4 +145,5 @@ class CategoryController extends Controller
             ], 500);
         }
     }
+
 }
