@@ -145,4 +145,32 @@ class CategoryController extends Controller
         }
     }
 
+    /**
+     * Store multiple newly created resources in storage.
+     */
+    public function storeMany(Request $request)
+    {
+        $max = 500; // Máximo de registros permitidos
+
+        $validated = $request->validate([
+            'categories' => "required|array|max:$max",
+            'categories.*.name' => 'required|max:255',
+            'categories.*.description' => 'required|max:255'
+        ]);
+
+        try {
+            foreach ($validated['categories'] as $data) {
+                Category::create($data);
+            }
+            return response()->json([
+                'message' => 'Categorías registradas exitosamente.',
+                'error' => false
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al registrar las categorías.',
+                'error' => true
+            ], 500);
+        }
+    }
 }
