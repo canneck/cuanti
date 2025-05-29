@@ -1,20 +1,21 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Category;
+use App\Models\Income;
 
-class CategoryController extends Controller
+class IncomeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $categories = Category::whereIn('status', ['Activo', 'Inactivo'])->get();
+        $incomes = Income::whereIn('status', ['Activo', 'Inactivo'])->get();
         return response()->json([
-            'categories' => $categories,
+            'incomes' => $incomes,
             'error' => false
         ], 200);
     }
@@ -33,19 +34,21 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|max:255',
-            'description' => 'required|max:255'
+            'datetime' => 'required|date',
+            'entity_id' => 'required|integer|exists:entities,id',
+            'reason' => 'required|max:255',
+            'amount' => 'required|numeric'
         ]);
 
         try {
-            Category::create($validated);
+            Income::create($validated);
             return response()->json([
-                'message' => 'Categoría creada exitosamente.',
+                'message' => 'Ingreso registrado exitosamente.',
                 'error' => false
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al crear la categoría.',
+                'message' => 'Error al registrar el ingreso.',
                 'error' => true
             ], 500);
         }
@@ -57,14 +60,14 @@ class CategoryController extends Controller
     public function show(string $id)
     {
         try {
-            $category = Category::findOrFail($id);
+            $income = Income::findOrFail($id);
             return response()->json([
-                'category' => $category,
+                'income' => $income,
                 'error' => false
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Categoría no encontrada.',
+                'message' => 'Ingreso no encontrado.',
                 'error' => true
             ], 404);
         }
@@ -84,25 +87,33 @@ class CategoryController extends Controller
     public function update(Request $request, string $id)
     {
         $validated = $request->validate([
-            'name' => 'sometimes|max:255',
-            'description' => 'sometimes|max:255'
+            'datetime' => 'sometimes|date',
+            'entity_id' => 'sometimes|integer|exists:entities,id',
+            'reason' => 'sometimes|max:255',
+            'amount' => 'sometimes|numeric'
         ]);
 
-        try {
-            $category = Category::findOrFail($id);
-            $category->update($validated);
+        if (empty($validated)) {
             return response()->json([
-                'message' => 'Categoría actualizada exitosamente.',
+                'message' => 'No se proporcionaron datos para actualizar.',
+                'error' => true
+            ], 400);
+        }
+
+        try {
+            $income = Income::findOrFail($id);
+            $income->update($validated);
+            return response()->json([
+                'message' => 'Ingreso actualizado exitosamente.',
                 'error' => false
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al actualizar la categoría.',
+                'message' => 'Error al actualizar el ingreso.',
                 'error' => true
             ], 500);
         }
     }
-
 
     public function updateStatus(Request $request, string $id)
     {
@@ -111,15 +122,15 @@ class CategoryController extends Controller
         ]);
 
         try {
-            $category = Category::findOrFail($id);
-            $category->update(['status' => $validated['status']]);
+            $income = Income::findOrFail($id);
+            $income->update(['status' => $validated['status']]);
             return response()->json([
-                'message' => 'Estado de la categoría actualizado exitosamente.',
+                'message' => 'Estado del ingreso actualizado exitosamente.',
                 'error' => false
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al actualizar el estado de la categoría.',
+                'message' => 'Error al actualizar el estado del ingreso.',
                 'error' => true
             ], 500);
         }
@@ -131,44 +142,43 @@ class CategoryController extends Controller
     public function destroy(string $id)
     {
         try {
-            $category = Category::findOrFail($id);
-            $category->delete();
+            $income = Income::findOrFail($id);
+            $income->delete();
             return response()->json([
-                'message' => 'Categoría eliminada exitosamente.',
+                'message' => 'Ingreso eliminado exitosamente.',
                 'error' => false
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al eliminar la categoría.',
+                'message' => 'Error al eliminar el ingreso.',
                 'error' => true
             ], 500);
         }
     }
 
-    /**
-     * Store multiple newly created resources in storage.
-     */
     public function storeMany(Request $request)
     {
-        $max = 500; // Máximo de registros permitidos
+        $max = 500; // Máximo de ingresos permitidos por petición
 
         $validated = $request->validate([
-            'categories' => "required|array|max:$max",
-            'categories.*.name' => 'required|max:255',
-            'categories.*.description' => 'required|max:255'
+            'incomes' => "required|array|max:$max",
+            'incomes.*.datetime' => 'required|date',
+            'incomes.*.entity_id' => 'required|integer|exists:entities,id',
+            'incomes.*.reason' => 'required|max:255',
+            'incomes.*.amount' => 'required|numeric'
         ]);
 
         try {
-            foreach ($validated['categories'] as $data) {
-                Category::create($data);
+            foreach ($validated['incomes'] as $incomeData) {
+                Income::create($incomeData);
             }
             return response()->json([
-                'message' => 'Categorías registradas exitosamente.',
+                'message' => 'Ingresos registrados exitosamente.',
                 'error' => false
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al registrar las categorías.',
+                'message' => 'Error al registrar los ingresos.',
                 'error' => true
             ], 500);
         }
