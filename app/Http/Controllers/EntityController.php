@@ -181,7 +181,7 @@ class EntityController extends Controller
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al registrar las entidades.',
+                'message' => 'Error al registrar las entidades: ' . $e->getMessage(),
                 'error' => true
             ], 500);
         }
