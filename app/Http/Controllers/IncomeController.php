@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Income;
+use Illuminate\Support\Facades\DB;
 
 class IncomeController extends Controller
 {
@@ -13,7 +14,15 @@ class IncomeController extends Controller
      */
     public function index()
     {
-        $incomes = Income::whereIn('status', ['Activo', 'Inactivo'])->get();
+        $incomes = DB::table('incomes')
+            ->join('entities', 'incomes.entity_id', '=', 'entities.id')
+            ->whereIn('incomes.status', ['Activo', 'Inactivo'])
+            ->select(
+                'incomes.*',
+                'entities.name as entity_name'
+            )
+            ->get();
+
         return response()->json([
             'incomes' => $incomes,
             'error' => false
