@@ -12,20 +12,53 @@ class ExpenseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $expenses = DB::table('expenses')
+        $query = DB::table('expenses')
             ->join('entities', 'expenses.entity_id', '=', 'entities.id')
             ->join('categories', 'expenses.category_id', '=', 'categories.id')
+            ->whereIn('expenses.status', ['Activo', 'Inactivo'])
             ->select(
                 'expenses.*',
                 'entities.name as entity_name',
                 'categories.name as category_name'
-            )
-            ->get();
+            );
+
+        // Filtro por rango de fechas
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('expenses.datetime', [$request->date_from, $request->date_to]);
+        }
+
+        // Filtro por entidades (puede ser un array de IDs)
+        if ($request->filled('entity_ids')) {
+            $entityIds = is_array($request->entity_ids) ? $request->entity_ids : explode(',', $request->entity_ids);
+            $query->whereIn('expenses.entity_id', $entityIds);
+        }
+
+        // Filtro por categorías (puede ser un array de IDs)
+        if ($request->filled('category_ids')) {
+            $categoryIds = is_array($request->category_ids) ? $request->category_ids : explode(',', $request->category_ids);
+            $query->whereIn('expenses.category_id', $categoryIds);
+        }
+
+        // Filtro por motivo/descripción (LIKE)
+        if ($request->filled('description')) {
+            $query->where('expenses.description', 'like', '%' . $request->description . '%');
+        }
+
+        // Filtro por rango de montos
+        if ($request->filled('amount_from') && $request->filled('amount_to')) {
+            $query->whereBetween('expenses.amount', [$request->amount_from, $request->amount_to]);
+        }
+
+        $expenses = $query->orderBy('expenses.datetime', 'desc')->get();
+        $total = $expenses->sum('amount');
+        $average = $expenses->avg('amount');
 
         return response()->json([
             'expenses' => $expenses,
+            'total' => $total,
+            'average' => $average,
             'error' => false
         ], 200);
     }

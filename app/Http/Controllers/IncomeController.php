@@ -12,19 +12,45 @@ class IncomeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $incomes = DB::table('incomes')
+        $query = DB::table('incomes')
             ->join('entities', 'incomes.entity_id', '=', 'entities.id')
             ->whereIn('incomes.status', ['Activo', 'Inactivo'])
             ->select(
                 'incomes.*',
                 'entities.name as entity_name'
-            )
-            ->get();
+            );
+
+        // Filtro por rango de fechas
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('incomes.datetime', [$request->date_from, $request->date_to]);
+        }
+
+        // Filtro por entidades (puede ser un array de IDs)
+        if ($request->filled('entity_ids')) {
+            $entityIds = is_array($request->entity_ids) ? $request->entity_ids : explode(',', $request->entity_ids);
+            $query->whereIn('incomes.entity_id', $entityIds);
+        }
+
+        // Filtro por motivo (LIKE)
+        if ($request->filled('reason')) {
+            $query->where('incomes.reason', 'like', '%' . $request->reason . '%');
+        }
+
+        // Filtro por rango de montos
+        if ($request->filled('amount_from') && $request->filled('amount_to')) {
+            $query->whereBetween('incomes.amount', [$request->amount_from, $request->amount_to]);
+        }
+
+        $incomes = $query->orderBy('incomes.datetime', 'desc')->get();
+        $total = $incomes->sum('amount');
+        $average = $incomes->avg('amount');
 
         return response()->json([
             'incomes' => $incomes,
+            'total' => $total,
+            'average' => $average,
             'error' => false
         ], 200);
     }
