@@ -59,7 +59,7 @@ class ExpenseController extends Controller
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al registrar el gasto.',
+                'message' => 'Error al registrar el gasto. '.$e->getMessage(),
                 'error' => true
             ], 500);
         }
