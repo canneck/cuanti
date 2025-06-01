@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ReportController;
 
 Route::apiResource('categories', CategoryController::class);
 Route::post('categories/{id}/updateStatus', [CategoryController::class, 'updateStatus']);
@@ -34,3 +35,8 @@ Route::apiResource('expenses', ExpenseController::class);
 */
 Route::post('expenses/{id}/updateStatus', [ExpenseController::class, 'updateStatus']);
 Route::post('expenses/many', [ExpenseController::class, 'storeMany']);
+
+Route::get('balance', [ReportController::class, 'balance']);
+/*
+    ?date_from=2024-05-01&date_to=2024-05-31
+*/

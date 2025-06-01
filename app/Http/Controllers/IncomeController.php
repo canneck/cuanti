@@ -16,7 +16,7 @@ class IncomeController extends Controller
     {
         $query = DB::table('incomes')
             ->join('entities', 'incomes.entity_id', '=', 'entities.id')
-            ->whereIn('incomes.status', ['Activo', 'Inactivo'])
+            ->whereIn('incomes.status', ['Activo'])
             ->select(
                 'incomes.*',
                 'entities.name as entity_name'

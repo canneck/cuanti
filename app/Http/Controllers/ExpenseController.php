@@ -17,7 +17,7 @@ class ExpenseController extends Controller
         $query = DB::table('expenses')
             ->join('entities', 'expenses.entity_id', '=', 'entities.id')
             ->join('categories', 'expenses.category_id', '=', 'categories.id')
-            ->whereIn('expenses.status', ['Activo', 'Inactivo'])
+            ->whereIn('expenses.status', ['Activo'])
             ->select(
                 'expenses.*',
                 'entities.name as entity_name',
